@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.core.config import settings
 from app.db.init_db import init_db
+from app.api.routes import threats
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -11,6 +12,8 @@ app = FastAPI(
 @app.on_event("startup")
 def startup_event():
     init_db()
+
+app.include_router(threats.router)
 
 @app.get("/")
 def root():
