@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.core.config import settings
 from app.db.init_db import init_db
-from app.api.routes import threats
+from app.api.routes import threats, ingestion
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -14,6 +14,7 @@ def startup_event():
     init_db()
 
 app.include_router(threats.router)
+app.include_router(ingestion.router)
 
 @app.get("/")
 def root():
