@@ -97,30 +97,32 @@ def parse_analysis(text: str) -> dict:
         "confidence_level": "",
     }
 
-    current_section = None
-    lines = text.strip().split("\n")
-
     section_map = {
-        "SUMMARY:": "summary",
-        "THREAT ASSESSMENT:": "threat_assessment",
-        "ATTACK TECHNIQUES:": "attack_techniques",
-        "POTENTIAL IMPACT:": "potential_impact",
-        "RECOMMENDED ACTIONS:": "recommended_actions",
-        "CONFIDENCE LEVEL:": "confidence_level",
+        "SUMMARY": "summary",
+        "THREAT ASSESSMENT": "threat_assessment",
+        "ATTACK TECHNIQUES": "attack_techniques",
+        "POTENTIAL IMPACT": "potential_impact",
+        "RECOMMENDED ACTIONS": "recommended_actions",
+        "CONFIDENCE LEVEL": "confidence_level",
     }
 
-    for line in lines:
+    current_section = None
+    for line in text.strip().split("\n"):
         line = line.strip()
+        if not line:
+            continue
+
         matched = False
         for key, section in section_map.items():
-            if line.startswith(key):
+            if key in line.upper():
                 current_section = section
-                remainder = line[len(key):].strip()
-                if remainder:
+                remainder = line.split(":", 1)[-1].strip()
+                if remainder and remainder != line:
                     sections[current_section] = remainder
                 matched = True
                 break
-        if not matched and current_section and line:
+
+        if not matched and current_section:
             if sections[current_section]:
                 sections[current_section] += " " + line
             else:
