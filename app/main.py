@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.core.config import settings
 from app.db.init_db import init_db
-from app.api.routes import threats, ingestion
+from app.api.routes import threats, ingestion, correlation
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -15,6 +15,7 @@ def startup_event():
 
 app.include_router(threats.router)
 app.include_router(ingestion.router)
+app.include_router(correlation.router)
 
 @app.get("/")
 def root():
