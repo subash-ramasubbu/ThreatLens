@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Shield, AlertTriangle, Database, Brain, RefreshCw, Search } from 'lucide-react';
+import { Shield, AlertTriangle, Brain } from 'lucide-react';
 import { api } from './api';
 import './App.css';
 
+// eslint-disable-next-line no-unused-vars
 const SEVERITY_COLORS = {
   critical: '#ef4444',
   high: '#f97316',
