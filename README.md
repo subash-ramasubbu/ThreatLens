@@ -7,10 +7,9 @@ ThreatLens is an open-source threat intelligence platform that aggregates data f
 ---
 
 ## 🚀 Live Demo
-- **Frontend:** [coming soon]
-- **Backend API:** [coming soon]
-- **API Docs:** [coming soon]
-
+- **Frontend:** https://threat-lens-theta.vercel.app
+- **Backend API:** https://threatlens-api-golw.onrender.com
+- **API Docs:** https://threatlens-api-golw.onrender.com/docs
 ---
 
 ## ✨ Features
