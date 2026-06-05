@@ -36,3 +36,13 @@ def ingest_all(db: Session = Depends(get_db)):
         "alienvault": otx,
         "nvd": nvd,
     }
+
+
+@router.post("/trigger-celery")
+def trigger_celery_fetch():
+    from app.tasks import fetch_all_threats
+    task = fetch_all_threats.delay()
+    return {
+        "message": "Celery task triggered",
+        "task_id": task.id,
+    }
