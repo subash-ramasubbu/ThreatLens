@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.init_db import init_db
-from app.api.routes import threats, ingestion, correlation, ai, cache
+from app.api.routes import threats, ingestion, correlation, ai, cache, export
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -27,6 +27,7 @@ app.include_router(ingestion.router)
 app.include_router(correlation.router)
 app.include_router(ai.router)
 app.include_router(cache.router)
+app.include_router(export.router)
 
 @app.get("/")
 def root():
