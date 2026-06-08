@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.db.init_db import init_db
 from app.api.routes import threats, ingestion, correlation, ai, cache, export
 from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts
+from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts, ml
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -30,6 +31,7 @@ app.include_router(ai.router)
 app.include_router(cache.router)
 app.include_router(export.router)
 app.include_router(alerts.router)
+app.include_router(ml.router)
 
 @app.get("/")
 def root():
