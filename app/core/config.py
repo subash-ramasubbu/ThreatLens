@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
 
+    EMAIL_ADDRESS: str = ""
+    EMAIL_PASSWORD: str = ""
+    ALERT_EMAIL: str = ""
+    SLACK_BOT_TOKEN: str = ""
+    SLACK_CHANNEL: str = ""
+
     class Config:
         env_file = ".env"
 
