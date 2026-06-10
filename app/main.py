@@ -22,7 +22,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"DB init skipped: {e}")
 
 app.include_router(threats.router)
 app.include_router(ingestion.router)
