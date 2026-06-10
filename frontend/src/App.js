@@ -79,6 +79,26 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
           </ResponsiveContainer>
         </div>
 
+    <div className="table-card" style={{ marginBottom: '24px' }}>
+      <div className="table-header">
+        <span>Platform Statistics</span>
+      </div>
+      <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+        <div>
+          <div className="stat-label">Total Monitored</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#38bdf8' }}>{threats.length}</div>
+        </div>
+        <div>
+          <div className="stat-label">Sources Active</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#22c55e' }}>3</div>
+        </div>
+        <div>
+          <div className="stat-label">AI Analyses</div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#a855f7' }}>∞</div>
+        </div>
+      </div>
+    </div>
+
         <div className="chart-card">
           <div className="chart-title">Severity Distribution</div>
           <ResponsiveContainer width="100%" height={200}>
