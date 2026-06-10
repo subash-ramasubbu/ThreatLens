@@ -5,6 +5,9 @@ from app.db.init_db import init_db
 from app.api.routes import threats, ingestion, correlation, ai, cache, export
 from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts
 from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts, ml
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -47,3 +50,25 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/version")
+def version():
+    return {
+        "platform": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "features": [
+            "threat-ingestion",
+            "correlation-engine",
+            "mitre-attack-mapping",
+            "ai-analyst",
+            "redis-caching",
+            "stix2-export",
+            "ml-anomaly-detection",
+            "email-slack-alerts",
+            "automated-scheduling",
+        ]
+    }
