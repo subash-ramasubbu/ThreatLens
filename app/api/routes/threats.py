@@ -190,3 +190,43 @@ def delete_threat(threat_id: int, db: Session = Depends(get_db)):
     delete_cached(f"threat:{threat_id}")
     clear_threats_cache()
     return {"message": f"Threat {threat_id} deleted successfully"}
+
+@router.get("/filter/by-type/{threat_type}", response_model=List[ThreatResponse])
+def filter_by_type(threat_type: str, db: Session = Depends(get_db)):
+    threats = db.query(ThreatIndicator).filter(
+        ThreatIndicator.type == threat_type
+    ).order_by(ThreatIndicator.risk_score.desc()).all()
+    if not threats:
+        raise HTTPException(status_code=404, detail=f"No {threat_type} threats found")
+    return threats
+
+
+@router.get("/filter/by-score", response_model=List[ThreatResponse])
+def filter_by_score(
+    min_score: float = 0,
+    max_score: float = 100,
+    db: Session = Depends(get_db)
+):
+    threats = db.query(ThreatIndicator).filter(
+        ThreatIndicator.risk_score >= min_score,
+        ThreatIndicator.risk_score <= max_score
+    ).order_by(ThreatIndicator.risk_score.desc()).all()
+    return threats
+
+
+@router.get("/filter/by-country/{country}", response_model=List[ThreatResponse])
+def filter_by_country(country: str, db: Session = Depends(get_db)):
+    threats = db.query(ThreatIndicator).filter(
+        ThreatIndicator.country == country.upper()
+    ).order_by(ThreatIndicator.risk_score.desc()).all()
+    if not threats:
+        raise HTTPException(status_code=404, detail=f"No threats from {country}")
+    return threats
+
+
+@router.get("/top/dangerous", response_model=List[ThreatResponse])
+def get_top_dangerous(limit: int = 10, db: Session = Depends(get_db)):
+    threats = db.query(ThreatIndicator).order_by(
+        ThreatIndicator.risk_score.desc()
+    ).limit(limit).all()
+    return threats
