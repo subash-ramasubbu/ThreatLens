@@ -9,6 +9,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts, ml, lookup
+from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts, ml, lookup, hunting
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -40,6 +41,7 @@ app.include_router(export.router)
 app.include_router(alerts.router)
 app.include_router(ml.router)
 app.include_router(lookup.router)
+app.include_router(hunting.router)
 
 @app.get("/")
 def root():
