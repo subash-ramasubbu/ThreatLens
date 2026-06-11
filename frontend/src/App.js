@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Shield, AlertTriangle, Brain } from 'lucide-react';
+import { Shield, AlertTriangle, Brain, Search } from 'lucide-react';
 import { api } from './api';
 import './App.css';
-import { Shield, AlertTriangle, Brain, Search } from 'lucide-react';
+
+const BASE_URL = 'https://threatlens-api-golw.onrender.com';
 
 // eslint-disable-next-line no-unused-vars
 const SEVERITY_COLORS = {
@@ -45,6 +47,20 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
           <button className="btn btn-primary" onClick={onCorrelate} disabled={loading}>
             🔗 Run Correlation
           </button>
+          <button
+            className="btn"
+            style={{ background: '#7c3aed', color: 'white' }}
+            onClick={() => window.open(`${BASE_URL}/api/export/pdf`, '_blank')}
+          >
+            📄 Export PDF
+          </button>
+          <button
+            className="btn"
+            style={{ background: '#0f766e', color: 'white' }}
+            onClick={() => window.open(`${BASE_URL}/api/export/stix2`, '_blank')}
+          >
+            📦 Export STIX2
+          </button>
         </div>
       </div>
 
@@ -80,26 +96,6 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
           </ResponsiveContainer>
         </div>
 
-    <div className="table-card" style={{ marginBottom: '24px' }}>
-      <div className="table-header">
-        <span>Platform Statistics</span>
-      </div>
-      <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-        <div>
-          <div className="stat-label">Total Monitored</div>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#38bdf8' }}>{threats.length}</div>
-        </div>
-        <div>
-          <div className="stat-label">Sources Active</div>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#22c55e' }}>3</div>
-        </div>
-        <div>
-          <div className="stat-label">AI Analyses</div>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#a855f7' }}>∞</div>
-        </div>
-      </div>
-    </div>
-
         <div className="chart-card">
           <div className="chart-title">Severity Distribution</div>
           <ResponsiveContainer width="100%" height={200}>
@@ -112,6 +108,26 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
               <Tooltip contentStyle={{ background: '#0f1629', border: '1px solid #1e2d4a' }} />
             </PieChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="table-card" style={{ marginBottom: '24px' }}>
+        <div className="table-header">
+          <span>Platform Statistics</span>
+        </div>
+        <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          <div>
+            <div className="stat-label">Total Monitored</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#38bdf8' }}>{threats.length}</div>
+          </div>
+          <div>
+            <div className="stat-label">Sources Active</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#22c55e' }}>3</div>
+          </div>
+          <div>
+            <div className="stat-label">AI Analyses</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#a855f7' }}>∞</div>
+          </div>
         </div>
       </div>
 
@@ -155,7 +171,6 @@ function ThreatsPage({ threats }) {
 
   useEffect(() => {
     let result = [...threats];
-
     if (search) {
       result = result.filter(t =>
         t.value.toLowerCase().includes(search.toLowerCase()) ||
@@ -163,17 +178,14 @@ function ThreatsPage({ threats }) {
         t.type.toLowerCase().includes(search.toLowerCase())
       );
     }
-
     if (typeFilter !== 'all') {
       result = result.filter(t => t.type === typeFilter);
     }
-
     result.sort((a, b) => {
       if (sortBy === 'risk_score') return b.risk_score - a.risk_score;
       if (sortBy === 'confidence') return b.confidence - a.confidence;
       return 0;
     });
-
     setFiltered(result);
   }, [search, typeFilter, sortBy, threats]);
 
@@ -291,10 +303,9 @@ function AIPage() {
           </button>
         </div>
       </div>
-
       {analysis && analysis.analysis && (
         <div className="analysis-card">
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ marginBottom: '16px' }}>
             <span style={{ fontFamily: 'monospace', color: '#38bdf8', fontSize: '16px' }}>{analysis.indicator}</span>
           </div>
           {Object.entries(analysis.analysis).map(([key, value]) => value && (
@@ -360,7 +371,6 @@ function HuntingPage() {
           </button>
         </div>
       </div>
-
       {results && (
         <div className="table-card">
           <div className="table-header">
@@ -390,6 +400,85 @@ function HuntingPage() {
             </tbody>
           </table>
         </div>
+      )}
+    </div>
+  );
+}
+
+function MLPage() {
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const runML = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}/api/ml/anomalies`);
+      setResults(res.data);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div>
+      <h1 className="page-title">ML Anomaly Detection</h1>
+      <div className="analysis-card" style={{ marginBottom: '24px' }}>
+        <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
+          Uses Isolation Forest algorithm to detect unusual threat patterns that don't match normal behavior.
+        </p>
+        <button className="btn btn-primary" onClick={runML} disabled={loading}>
+          {loading ? 'Analyzing...' : '🤖 Run ML Detection'}
+        </button>
+      </div>
+      {results && (
+        <>
+          <div className="stats-grid" style={{ marginBottom: '24px' }}>
+            <div className="stat-card">
+              <div className="stat-label">Total Analyzed</div>
+              <div className="stat-value total">{results.total_analyzed}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Anomalies Found</div>
+              <div className="stat-value critical">{results.anomalies_detected}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Anomaly Rate</div>
+              <div className="stat-value high">{results.anomaly_rate}%</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Normal</div>
+              <div className="stat-value medium">{results.normal_count}</div>
+            </div>
+          </div>
+          <div className="table-card">
+            <div className="table-header">
+              <span>Top Anomalies</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Value</th>
+                  <th>Type</th>
+                  <th>Risk Score</th>
+                  <th>Anomaly Score</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.top_anomalies?.map((a, i) => (
+                  <tr key={i}>
+                    <td style={{ fontFamily: 'monospace', color: '#38bdf8', fontSize: '12px' }}>{a.value}</td>
+                    <td>{a.type?.toUpperCase()}</td>
+                    <td><span className="risk-score">{a.risk_score}</span></td>
+                    <td style={{ color: '#ef4444' }}>{a.anomaly_score}</td>
+                    <td>{a.source}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
@@ -431,10 +520,11 @@ export default function App() {
   };
 
   const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Shield },
-  { id: 'threats', label: 'Threats', icon: AlertTriangle },
-  { id: 'hunting', label: 'Threat Hunting', icon: Search },
-  { id: 'ai', label: 'AI Analyst', icon: Brain },
+    { id: 'dashboard', label: 'Dashboard', icon: Shield },
+    { id: 'threats', label: 'Threats', icon: AlertTriangle },
+    { id: 'hunting', label: 'Threat Hunting', icon: Search },
+    { id: 'ml', label: 'ML Detection', icon: Brain },
+    { id: 'ai', label: 'AI Analyst', icon: Brain },
   ];
 
   return (
@@ -466,8 +556,9 @@ export default function App() {
           />
         )}
         {page === 'threats' && <ThreatsPage threats={threats} />}
-        {page === 'ai' && <AIPage />}
         {page === 'hunting' && <HuntingPage />}
+        {page === 'ml' && <MLPage />}
+        {page === 'ai' && <AIPage />}
       </div>
     </div>
   );
