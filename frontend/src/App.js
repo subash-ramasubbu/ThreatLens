@@ -148,32 +148,68 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
 
 function ThreatsPage({ threats }) {
   const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('risk_score');
   const [filtered, setFiltered] = useState(threats);
 
   useEffect(() => {
-    if (!search) {
-      setFiltered(threats);
-    } else {
-      setFiltered(threats.filter(t =>
-        t.value.includes(search) ||
-        t.tags?.includes(search) ||
-        t.type.includes(search)
-      ));
+    let result = [...threats];
+
+    if (search) {
+      result = result.filter(t =>
+        t.value.toLowerCase().includes(search.toLowerCase()) ||
+        t.tags?.toLowerCase().includes(search.toLowerCase()) ||
+        t.type.toLowerCase().includes(search.toLowerCase())
+      );
     }
-  }, [search, threats]);
+
+    if (typeFilter !== 'all') {
+      result = result.filter(t => t.type === typeFilter);
+    }
+
+    result.sort((a, b) => {
+      if (sortBy === 'risk_score') return b.risk_score - a.risk_score;
+      if (sortBy === 'confidence') return b.confidence - a.confidence;
+      return 0;
+    });
+
+    setFiltered(result);
+  }, [search, typeFilter, sortBy, threats]);
+
+  const types = ['all', ...new Set(threats.map(t => t.type))];
 
   return (
     <div>
       <h1 className="page-title">Threat Indicators</h1>
-      <input
-        className="search-bar"
-        placeholder="Search by IP, domain, hash, tag..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-      />
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+        <input
+          className="search-bar"
+          style={{ margin: 0, flex: 1 }}
+          placeholder="Search by value, tag, type..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <select
+          value={typeFilter}
+          onChange={e => setTypeFilter(e.target.value)}
+          style={{ padding: '10px', background: '#0f1629', border: '1px solid #1e2d4a', borderRadius: '8px', color: '#e2e8f0' }}
+        >
+          {types.map(t => (
+            <option key={t} value={t}>{t.toUpperCase()}</option>
+          ))}
+        </select>
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          style={{ padding: '10px', background: '#0f1629', border: '1px solid #1e2d4a', borderRadius: '8px', color: '#e2e8f0' }}
+        >
+          <option value="risk_score">Sort by Risk Score</option>
+          <option value="confidence">Sort by Confidence</option>
+        </select>
+      </div>
       <div className="table-card">
         <div className="table-header">
-          <span>All Threats</span>
+          <span>Threat Indicators</span>
           <span style={{ fontSize: '13px', color: '#64748b' }}>{filtered.length} results</span>
         </div>
         <table>
@@ -185,6 +221,7 @@ function ThreatsPage({ threats }) {
               <th>Severity</th>
               <th>Risk Score</th>
               <th>Source</th>
+              <th>Country</th>
               <th>Tags</th>
             </tr>
           </thead>
@@ -197,6 +234,7 @@ function ThreatsPage({ threats }) {
                 <td><span className={`badge badge-${t.severity}`}>{t.severity}</span></td>
                 <td><span className="risk-score">{t.risk_score}</span></td>
                 <td>{t.source}</td>
+                <td>{t.country || '—'}</td>
                 <td><span className="tags">{t.tags}</span></td>
               </tr>
             ))}
