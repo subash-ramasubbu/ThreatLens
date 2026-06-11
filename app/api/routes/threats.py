@@ -5,6 +5,7 @@ from app.db.database import get_db
 from app.db.models import ThreatIndicator
 from app.api.schemas import ThreatCreate, ThreatResponse, ThreatUpdate
 from app.core.cache import get_cached, set_cached, delete_cached, clear_threats_cache
+from sqlalchemy import func
 
 router = APIRouter(prefix="/api/threats", tags=["Threats"])
 
@@ -230,3 +231,41 @@ def get_top_dangerous(limit: int = 10, db: Session = Depends(get_db)):
         ThreatIndicator.risk_score.desc()
     ).limit(limit).all()
     return threats
+
+
+@router.get("/timeline/daily")
+def get_daily_timeline(db: Session = Depends(get_db)):
+    results = db.query(
+        func.date(ThreatIndicator.created_at).label("date"),
+        func.count(ThreatIndicator.id).label("count"),
+    ).group_by(
+        func.date(ThreatIndicator.created_at)
+    ).order_by(
+        func.date(ThreatIndicator.created_at)
+    ).all()
+
+    return {
+        "timeline": [
+            {"date": str(r.date), "count": r.count}
+            for r in results
+        ]
+    }
+
+@router.get("/timeline/by-source")
+def get_source_timeline(db: Session = Depends(get_db)):
+    results = db.query(
+        ThreatIndicator.source,
+        func.count(ThreatIndicator.id).label("count"),
+        func.avg(ThreatIndicator.risk_score).label("avg_score"),
+    ).group_by(ThreatIndicator.source).all()
+
+    return {
+        "sources": [
+            {
+                "source": r.source,
+                "count": r.count,
+                "avg_risk_score": round(float(r.avg_score), 2),
+            }
+            for r in results
+        ]
+    }

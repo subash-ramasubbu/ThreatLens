@@ -32,4 +32,10 @@ export const api = {
 
   getReport: () =>
     axios.get(`${BASE_URL}/api/ai/report`),
+
+  getTimeline: () =>
+    axios.get(`${BASE_URL}/api/threats/timeline/daily`),
+
+getSourceStats: () =>
+    axios.get(`${BASE_URL}/api/threats/timeline/by-source`),
 };
