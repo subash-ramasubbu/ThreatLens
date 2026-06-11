@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { Shield, AlertTriangle, Brain } from 'lucide-react';
 import { api } from './api';
 import './App.css';
+import { Shield, AlertTriangle, Brain, Search } from 'lucide-react';
 
 // eslint-disable-next-line no-unused-vars
 const SEVERITY_COLORS = {
@@ -308,6 +309,92 @@ function AIPage() {
   );
 }
 
+function HuntingPage() {
+  const [query, setQuery] = useState('');
+  const [huntType, setHuntType] = useState('tag');
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const hunt = async () => {
+    if (!query && huntType !== 'high-risk' && huntType !== 'c2') return;
+    setLoading(true);
+    try {
+      let res;
+      if (huntType === 'tag') res = await api.huntByTag(query);
+      else if (huntType === 'mitre') res = await api.huntMitre(query);
+      else if (huntType === 'high-risk') res = await api.huntHighRisk();
+      else if (huntType === 'c2') res = await api.huntC2();
+      setResults(res.data);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div>
+      <h1 className="page-title">Threat Hunting</h1>
+      <div className="analysis-card">
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+          <select
+            value={huntType}
+            onChange={e => setHuntType(e.target.value)}
+            style={{ padding: '10px', background: '#0a0e1a', border: '1px solid #1e2d4a', borderRadius: '8px', color: '#e2e8f0' }}
+          >
+            <option value="tag">Hunt by Tag</option>
+            <option value="mitre">Hunt by MITRE ATT&CK</option>
+            <option value="high-risk">High Risk IPs</option>
+            <option value="c2">C2 Infrastructure</option>
+          </select>
+          {(huntType === 'tag' || huntType === 'mitre') && (
+            <input
+              className="search-bar"
+              style={{ margin: 0, flex: 1 }}
+              placeholder={huntType === 'tag' ? 'Enter tag (e.g. ransomware)' : 'Enter technique (e.g. T1046)'}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+            />
+          )}
+          <button className="btn btn-primary" onClick={hunt} disabled={loading}>
+            {loading ? 'Hunting...' : '🔍 Hunt'}
+          </button>
+        </div>
+      </div>
+
+      {results && (
+        <div className="table-card">
+          <div className="table-header">
+            <span>Hunt Results: {results.hunt_query}</span>
+            <span style={{ fontSize: '13px', color: '#64748b' }}>{results.results} found</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Value</th>
+                <th>Type</th>
+                <th>Risk Score</th>
+                <th>Tags</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.threats?.map((t, i) => (
+                <tr key={i}>
+                  <td style={{ fontFamily: 'monospace', color: '#38bdf8', fontSize: '12px' }}>{t.value}</td>
+                  <td>{t.type?.toUpperCase()}</td>
+                  <td><span className="risk-score">{t.risk_score}</span></td>
+                  <td><span className="tags">{t.tags}</span></td>
+                  <td>{t.source}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState('dashboard');
   const [threats, setThreats] = useState([]);
@@ -344,9 +431,10 @@ export default function App() {
   };
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Shield },
-    { id: 'threats', label: 'Threats', icon: AlertTriangle },
-    { id: 'ai', label: 'AI Analyst', icon: Brain },
+  { id: 'dashboard', label: 'Dashboard', icon: Shield },
+  { id: 'threats', label: 'Threats', icon: AlertTriangle },
+  { id: 'hunting', label: 'Threat Hunting', icon: Search },
+  { id: 'ai', label: 'AI Analyst', icon: Brain },
   ];
 
   return (
@@ -379,6 +467,7 @@ export default function App() {
         )}
         {page === 'threats' && <ThreatsPage threats={threats} />}
         {page === 'ai' && <AIPage />}
+        {page === 'hunting' && <HuntingPage />}
       </div>
     </div>
   );

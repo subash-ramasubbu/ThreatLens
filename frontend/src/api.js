@@ -36,6 +36,19 @@ export const api = {
   getTimeline: () =>
     axios.get(`${BASE_URL}/api/threats/timeline/daily`),
 
-getSourceStats: () =>
+  getSourceStats: () =>
     axios.get(`${BASE_URL}/api/threats/timeline/by-source`),
+  
+  huntByTag: (tag) =>
+    axios.get(`${BASE_URL}/api/hunt/tag/${tag}`),
+
+  huntHighRisk: () =>
+    axios.get(`${BASE_URL}/api/hunt/high-risk-ips`),
+
+  huntC2: () =>
+    axios.get(`${BASE_URL}/api/hunt/c2-infrastructure`),
+
+  huntMitre: (technique) =>
+    axios.get(`${BASE_URL}/api/hunt/mitre/${technique}`),
+
 };
