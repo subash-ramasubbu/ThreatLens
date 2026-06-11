@@ -5,6 +5,8 @@ from typing import Optional
 from app.db.database import get_db
 from app.db.models import ThreatIndicator
 from app.core.stix_export import export_bundle, threat_to_stix
+from fastapi.responses import Response
+from app.core.pdf_report import generate_pdf_report
 
 router = APIRouter(prefix="/api/export", tags=["Export"])
 
@@ -82,3 +84,44 @@ def export_summary(db: Session = Depends(get_db)):
         "critical_count": len([t for t in threats if t.risk_score >= 85]),
         "export_format": "STIX2.1",
     }
+    
+    @router.get("/pdf")
+def export_pdf(db: Session = Depends(get_db)):
+    threats = db.query(ThreatIndicator).order_by(
+        ThreatIndicator.risk_score.desc()
+    ).limit(50).all()
+
+    if not threats:
+        raise HTTPException(status_code=404, detail="No threats found")
+
+    from collections import Counter
+    summary = {
+        "total": len(threats),
+        "critical": len([t for t in threats if t.risk_score >= 85]),
+        "high": len([t for t in threats if 65 <= t.risk_score < 85]),
+        "medium": len([t for t in threats if 40 <= t.risk_score < 65]),
+        "avg_risk_score": round(
+            sum(t.risk_score for t in threats) / len(threats), 2
+        ),
+    }
+
+    threats_list = [
+        {
+            "value": t.value,
+            "type": t.type,
+            "risk_score": t.risk_score,
+            "source": t.source,
+            "tags": t.tags,
+        }
+        for t in threats
+    ]
+
+    pdf_bytes = generate_pdf_report(summary, threats_list)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": "attachment; filename=threatlens-report.pdf"
+        }
+    )
