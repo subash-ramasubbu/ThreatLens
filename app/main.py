@@ -1,14 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
-from app.db.init_db import init_db
-from app.api.routes import threats, ingestion, correlation, ai, cache, export
-from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts
-from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts, ml
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts, ml, lookup
+from app.core.config import settings
+from app.db.init_db import init_db
 from app.api.routes import threats, ingestion, correlation, ai, cache, export, alerts, ml, lookup, hunting
 
 app = FastAPI(
@@ -16,6 +12,10 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description="AI-powered threat intelligence platform",
 )
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,10 +55,6 @@ def root():
 def health_check():
     return {"status": "healthy"}
 
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
 @app.get("/version")
 def version():
     return {
@@ -74,5 +70,9 @@ def version():
             "ml-anomaly-detection",
             "email-slack-alerts",
             "automated-scheduling",
+            "threat-hunting",
+            "ip-reputation-lookup",
+            "cve-intelligence",
+            "pdf-reports",
         ]
     }
