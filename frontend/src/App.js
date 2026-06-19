@@ -531,7 +531,7 @@ export default function App() {
     <div className="app">
       <div className="sidebar">
         <div className="sidebar-logo">
-          🛡 Threat<span>Lens</span>
+          ThreatLens
         </div>
         {navItems.map(item => (
           <div
