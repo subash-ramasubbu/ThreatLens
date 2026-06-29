@@ -261,30 +261,83 @@ function ThreatsPage({ threats }) {
 function AIPage() {
   const [indicator, setIndicator] = useState('');
   const [type, setType] = useState('ip');
-  const [analysis, setAnalysis] = useState(null);
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const getVerdictStyle = (score) => {
+    if (score >= 85) return {
+      bg: 'linear-gradient(135deg, #450a0a 0%, #1a0505 100%)',
+      border: '#ef4444',
+      color: '#ef4444',
+      label: '⚠ CRITICAL THREAT',
+    };
+    if (score >= 65) return {
+      bg: 'linear-gradient(135deg, #431407 0%, #1a0a02 100%)',
+      border: '#f97316',
+      color: '#f97316',
+      label: '🔶 HIGH THREAT',
+    };
+    if (score >= 40) return {
+      bg: 'linear-gradient(135deg, #422006 0%, #1a1002 100%)',
+      border: '#eab308',
+      color: '#eab308',
+      label: '⚡ MEDIUM THREAT',
+    };
+    return {
+      bg: 'linear-gradient(135deg, #052e16 0%, #021a0a 100%)',
+      border: '#22c55e',
+      color: '#22c55e',
+      label: '✅ SAFE',
+    };
+  };
+
+  const extractMitre = (text) => {
+    if (!text) return [];
+    const matches = text.match(/T\d{4}(?:\.\d{3})?[^)"]*/g) || [];
+    return [...new Set(matches)].slice(0, 4);
+  };
+
+  const extractSummary = (analysis) => {
+    const s = analysis?.summary || analysis?.threat_assessment || '';
+    const sentences = s.match(/[^.!?]+[.!?]+/g) || [];
+    return sentences.slice(0, 2).join(' ').replace(/\*\*/g, '').trim();
+  };
+
+  const extractAction = (analysis) => {
+    const s = analysis?.recommended_actions || '';
+    const sentences = s.match(/[^.!?]+[.!?]+/g) || [];
+    return sentences.slice(0, 2).join(' ').replace(/\*\*/g, '').replace(/\*/g, '').trim();
+  };
 
   const analyze = async () => {
     if (!indicator) return;
     setLoading(true);
+    setResult(null);
     try {
       const res = await api.analyzeIndicator(indicator, type);
-      setAnalysis(res.data);
+      setResult(res.data);
     } catch (e) {
       console.error(e);
     }
     setLoading(false);
   };
 
+  const score = result?.risk_score || 0;
+  const verdict = getVerdictStyle(score);
+  const mitreTechniques = extractMitre(result?.analysis?.attack_techniques || '');
+  const summary = extractSummary(result?.analysis || {});
+  const action = extractAction(result?.analysis || {});
+
   return (
     <div>
       <h1 className="page-title">AI Analyst</h1>
-      <div className="analysis-card">
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+
+      <div className="analysis-card" style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <select
             value={type}
             onChange={e => setType(e.target.value)}
-            style={{ padding: '10px', background: '#0a0e1a', border: '1px solid #1e2d4a', borderRadius: '8px', color: '#e2e8f0' }}
+            style={{ padding: '10px', background: '#0a0e1a', border: '1px solid #1e2d4a', borderRadius: '8px', color: '#e2e8f0', fontSize: '13px' }}
           >
             <option value="ip">IP Address</option>
             <option value="domain">Domain</option>
@@ -297,25 +350,107 @@ function AIPage() {
             placeholder="Enter IP, domain, hash or CVE..."
             value={indicator}
             onChange={e => setIndicator(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && analyze()}
           />
           <button className="btn btn-primary" onClick={analyze} disabled={loading}>
             {loading ? 'Analyzing...' : '🔍 Analyze'}
           </button>
         </div>
       </div>
-      {analysis && analysis.analysis && (
-        <div className="analysis-card">
-          <div style={{ marginBottom: '16px' }}>
-            <span style={{ fontFamily: 'monospace', color: '#38bdf8', fontSize: '16px' }}>{analysis.indicator}</span>
-          </div>
-          {Object.entries(analysis.analysis).map(([key, value]) => value && (
-            <div className="analysis-section" key={key}>
-              <div className="analysis-label">{key.replace(/_/g, ' ')}</div>
-              <div className="analysis-text">{value}</div>
-            </div>
-          ))}
+
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔍</div>
+          <div>Analyzing threat intelligence...</div>
         </div>
       )}
+
+      {result && !loading && (
+        <div style={{
+          background: verdict.bg,
+          border: `1px solid ${verdict.border}`,
+          borderRadius: '16px',
+          padding: '24px',
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: verdict.color, fontWeight: '700', letterSpacing: '2px', marginBottom: '4px' }}>
+                {verdict.label}
+              </div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: '#ffffff', fontFamily: 'monospace' }}>
+                {result.indicator || indicator}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '42px', fontWeight: '900', color: verdict.color, lineHeight: 1 }}>{score}</div>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>Risk Score</div>
+            </div>
+          </div>
+
+          {/* What is it */}
+          {summary && (
+            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: verdict.color, fontWeight: '700', letterSpacing: '1px', marginBottom: '6px' }}>WHAT IS IT</div>
+              <div style={{ fontSize: '14px', color: '#f1f5f9', lineHeight: '1.6' }}>{summary}</div>
+            </div>
+          )}
+
+          {/* Quick facts */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
+            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>TYPE</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#ffffff' }}>{type.toUpperCase()}</div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>CONFIDENCE</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#ffffff' }}>{result.analysis?.confidence_level?.split(' ')[0] || '—'}</div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>VERDICT</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: verdict.color }}>
+                {score >= 85 ? 'BLOCK' : score >= 65 ? 'MONITOR' : score >= 40 ? 'REVIEW' : 'SAFE'}
+              </div>
+            </div>
+          </div>
+
+          {/* MITRE tags */}
+          {mitreTechniques.length > 0 && (
+            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: verdict.color, fontWeight: '700', letterSpacing: '1px', marginBottom: '8px' }}>MITRE ATT&CK</div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {mitreTechniques.map((t, i) => (
+                  <span key={i} style={{ background: '#1e1a2e', border: '1px solid #6366f1', color: '#a5b4fc', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' }}>
+                    {t.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Immediate action */}
+          {action && (
+            <div style={{ background: `rgba(${score >= 85 ? '239,68,68' : score >= 65 ? '249,115,22' : score >= 40 ? '234,179,8' : '34,197,94'},0.15)`, border: `1px solid rgba(${score >= 85 ? '239,68,68' : score >= 65 ? '249,115,22' : score >= 40 ? '234,179,8' : '34,197,94'},0.3)`, borderRadius: '10px', padding: '14px' }}>
+              <div style={{ fontSize: '11px', color: verdict.color, fontWeight: '700', letterSpacing: '1px', marginBottom: '6px' }}>⚡ IMMEDIATE ACTION</div>
+              <div style={{ fontSize: '14px', color: '#f1f5f9', lineHeight: '1.6' }}>{action}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+        {[
+          { label: 'CRITICAL', bg: '#450a0a', border: '#ef4444', color: '#ef4444' },
+          { label: 'HIGH', bg: '#431407', border: '#f97316', color: '#f97316' },
+          { label: 'MEDIUM', bg: '#422006', border: '#eab308', color: '#eab308' },
+          { label: 'SAFE', bg: '#052e16', border: '#22c55e', color: '#22c55e' },
+        ].map((v, i) => (
+          <div key={i} style={{ flex: 1, background: v.bg, border: `1px solid ${v.border}`, borderRadius: '8px', padding: '10px', textAlign: 'center', fontSize: '11px', color: v.color, fontWeight: '700' }}>
+            {v.label}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
