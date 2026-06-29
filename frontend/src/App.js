@@ -264,7 +264,13 @@ function AIPage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const getVerdictStyle = (score) => {
+  const getVerdictStyle = (score, hasResult) => {
+    if (!hasResult) return {
+      bg: 'linear-gradient(135deg, #1e1e2e 0%, #0a0e1a 100%)',
+      border: '#475569',
+      color: '#94a3b8',
+      label: '❓ UNKNOWN INDICATOR',
+    };
     if (score >= 85) return {
       bg: 'linear-gradient(135deg, #450a0a 0%, #1a0505 100%)',
       border: '#ef4444',
