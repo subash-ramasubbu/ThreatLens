@@ -330,29 +330,7 @@ function AIPage() {
 
   const score = result?.risk_score || 0;
 
-  const confidenceText = (result?.analysis?.confidence_level || '').toUpperCase();
-  const assessmentText = (result?.analysis?.threat_assessment || '').toUpperCase();
-  const summaryText = (result?.analysis?.summary || '').toUpperCase();
-  const combinedText = assessmentText + ' ' + summaryText;
-
-  const noDataFound = /\bWITHOUT (A )?SPECIFIC|CHALLENGING TO PROVIDE|UNABLE TO DETERMINE|INSUFFICIENT (DATA|INFORMATION)|CANNOT DETERMINE|NOT ENOUGH (DATA|INFORMATION)\b/.test(combinedText);
-
-  const isSafe = !noDataFound && /\b(NOT MALICIOUS|NO EVIDENCE|IS LEGITIMATE|IS BENIGN|NOT SUSPICIOUS|NOT A THREAT|NOT KNOWN TO BE MALICIOUS|NO INDICATION|IS TRUSTED|APPEARS SAFE|WELL[ -]KNOWN (AND )?(LEGITIMATE|TRUSTED|SAFE))\b/.test(combinedText);
-
-  const isCritical = !isSafe && !noDataFound && /\b(RANSOMWARE|C2 SERVER|ACTIVELY MALICIOUS|CONFIRMED MALICIOUS|HIGHLY MALICIOUS|CRITICAL THREAT|KNOWN MALICIOUS)\b/.test(combinedText);
-
-  const isHigh = !isSafe && !isCritical && !noDataFound && /\bIS MALICIOUS|IS SUSPICIOUS|HIGH RISK|COMPROMISED|BOTNET|PHISHING|MALWARE\b/.test(combinedText);
-
-  const isMedium = !isSafe && !isCritical && !isHigh && !noDataFound && /\b(POTENTIALLY|MODERATE|UNCERTAIN|MIXED SIGNALS|SOME CONCERN)\b/.test(combinedText);
-
-  let aiScore = 0;
-  if (isCritical) aiScore = 90;
-  else if (isHigh) aiScore = 70;
-  else if (isMedium) aiScore = 50;
-  else if (isSafe) aiScore = 15;
-  else if (noDataFound) aiScore = 0;
-
-  const effectiveScore = score > 0 ? score : aiScore;
+  const effectiveScore = result?.risk_score || 0;
   const hasResult = result?.analysis?.summary?.length > 0;
   const verdict = getVerdictStyle(effectiveScore, hasResult);
   const verdictLabel = effectiveScore >= 85 ? 'BLOCK' : effectiveScore >= 65 ? 'MONITOR' : effectiveScore >= 40 ? 'REVIEW' : effectiveScore > 0 ? 'LOW RISK' : 'UNKNOWN';
