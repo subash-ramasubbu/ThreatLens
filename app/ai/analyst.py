@@ -89,6 +89,7 @@ CONFIDENCE LEVEL:
 
 def parse_analysis(text: str) -> dict:
     sections = {
+        "risk_score_text": "",
         "summary": "",
         "threat_assessment": "",
         "attack_techniques": "",
@@ -98,6 +99,7 @@ def parse_analysis(text: str) -> dict:
     }
 
     section_map = {
+        "RISK_SCORE": "risk_score_text",
         "SUMMARY": "summary",
         "THREAT ASSESSMENT": "threat_assessment",
         "ATTACK TECHNIQUES": "attack_techniques",
@@ -138,7 +140,10 @@ def analyze_custom_indicator(indicator: str, indicator_type: str) -> dict:
     prompt = f"""You are an expert SOC analyst.
 Analyze this {indicator_type.upper()} indicator: {indicator}
 
-Provide analysis in this structure:
+Provide analysis in exactly this structure:
+
+RISK_SCORE:
+[A single number from 0 to 100. Use 0-20 for well-known legitimate/safe entities like google.com, github.com, microsoft.com. Use 85-100 only for confirmed malicious indicators like known malware, ransomware C2, or actively reported abuse. Use 40-65 if genuinely unknown or no information exists. Output ONLY the number, nothing else.]
 
 SUMMARY:
 [What is this indicator]
@@ -147,10 +152,10 @@ THREAT ASSESSMENT:
 [Is this malicious, suspicious, or benign based on your knowledge]
 
 ATTACK TECHNIQUES:
-[Relevant MITRE ATT&CK techniques if applicable]
+[Relevant MITRE ATT&CK techniques ONLY if this is actually a real threat. If this is a known legitimate service, write "None - this is a recognized legitimate entity."]
 
 POTENTIAL IMPACT:
-[What could happen if this is malicious]
+[What could happen if this is malicious. If legitimate, write "N/A - legitimate service."]
 
 RECOMMENDED ACTIONS:
 [What should a security analyst do]
@@ -179,9 +184,14 @@ CONFIDENCE LEVEL:
         analysis = response.choices[0].message.content
         sections = parse_analysis(analysis)
 
+        import re
+        score_match = re.search(r'\d+', sections.get("risk_score_text", ""))
+        parsed_score = int(score_match.group()) if score_match else 50
+
         return {
             "indicator": indicator,
             "type": indicator_type,
+            "risk_score": parsed_score,
             "analysis": sections,
             "raw_analysis": analysis,
         }
