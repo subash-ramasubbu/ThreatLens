@@ -41,26 +41,26 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1 className="page-title" style={{ margin: 0 }}>Dashboard</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-success" onClick={onIngest} disabled={loading}>
+          <button className="btn" style={{ background: '#27272a', color: 'white' }} onClick={onIngest} disabled={loading}>
             {loading ? 'Loading...' : '⬇ Ingest Threats'}
           </button>
-          <button className="btn btn-primary" onClick={onCorrelate} disabled={loading}>
+          <button className="btn" style={{ background: '#27272a', color: 'white' }} onClick={onCorrelate} disabled={loading}>
             🔗 Run Correlation
           </button>
           <button
             className="btn"
-            style={{ background: '#7c3aed', color: 'white' }}
-            onClick={() => window.open(`${BASE_URL}/api/export/pdf`, '_blank')}
-          >
-            📄 Export PDF
-          </button>
-          <button
-            className="btn"
-            style={{ background: '#0f766e', color: 'white' }}
-            onClick={() => window.open(`${BASE_URL}/api/export/stix2`, '_blank')}
-          >
-            📦 Export STIX2
-          </button>
+              style={{ background: '#ffffff', color: '#27272a', border: '1.5px solid #27272a' }}
+              onClick={() => window.open(`${BASE_URL}/api/export/pdf`, '_blank')}
+>
+              📄 Export PDF
+            </button>
+            <button
+              className="btn"
+              style={{ background: '#ffffff', color: '#27272a', border: '1.5px solid #27272a' }}
+              onClick={() => window.open(`${BASE_URL}/api/export/stix2`, '_blank')}
+>
+              📦 Export STIX2
+            </button>
         </div>
       </div>
 
