@@ -88,10 +88,10 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
           <div className="chart-title">Threats by Source</div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={barData}>
-              <XAxis dataKey="source" tick={{ fill: '#64748b', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} />
-              <Tooltip contentStyle={{ background: '#0f1629', border: '1px solid #1e2d4a', borderRadius: '8px' }} />
-              <Bar dataKey="count" fill="#38bdf8" radius={[4, 4, 0, 0]} />
+              <XAxis dataKey="source" tick={{ fill: '#a1a1aa', fontSize: 11 }} />
+              <YAxis tick={{ fill: '#a1a1aa', fontSize: 11 }} />
+              <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e4e4e7', borderRadius: '8px' }} />
+              <Bar dataKey="count" fill="#4338ca" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -105,7 +105,7 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
                   <Cell key={index} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ background: '#0f1629', border: '1px solid #1e2d4a' }} />
+              <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e4e4e7' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -205,7 +205,7 @@ function ThreatsPage({ threats }) {
         <select
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
-          style={{ padding: '10px', background: '#0f1629', border: '1px solid #1e2d4a', borderRadius: '8px', color: '#e2e8f0' }}
+          style={{ padding: '10px', background: '#ffffff', border: '1px solid #e4e4e7', borderRadius: '8px', color: '#27272a' }}
         >
           {types.map(t => (
             <option key={t} value={t}>{t.toUpperCase()}</option>
@@ -214,7 +214,7 @@ function ThreatsPage({ threats }) {
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value)}
-          style={{ padding: '10px', background: '#0f1629', border: '1px solid #1e2d4a', borderRadius: '8px', color: '#e2e8f0' }}
+          style={{ padding: '10px', background: '#ffffff', border: '1px solid #e4e4e7', borderRadius: '8px', color: '#27272a' }}
         >
           <option value="risk_score">Sort by Risk Score</option>
           <option value="confidence">Sort by Confidence</option>
@@ -329,7 +329,21 @@ function AIPage() {
   };
 
   const score = result?.risk_score || 0;
-  const verdict = getVerdictStyle(score);
+
+  const confidenceText = result?.analysis?.confidence_level?.toUpperCase() || '';
+  const summaryText = (result?.analysis?.summary || '').toUpperCase();
+  const assessmentText = (result?.analysis?.threat_assessment || '').toUpperCase();
+  const allText = confidenceText + summaryText + assessmentText;
+
+  const aiScore = allText.includes('MALICIOUS') || allText.includes('CRITICAL') ? 90
+    : allText.includes('HIGH') || allText.includes('SUSPICIOUS') ? 70
+    : allText.includes('MEDIUM') || allText.includes('MODERATE') ? 50
+    : allText.includes('LOW') || allText.includes('BENIGN') || allText.includes('SAFE') ? 20
+    : 0;
+
+  const effectiveScore = score > 0 ? score : aiScore;
+  const hasResult = effectiveScore > 0 || (result?.analysis?.summary?.length > 0);
+  const verdict = getVerdictStyle(effectiveScore, hasResult);
   const mitreTechniques = extractMitre(result?.analysis?.attack_techniques || '');
   const summary = extractSummary(result?.analysis || {});
   const action = extractAction(result?.analysis || {});
@@ -389,7 +403,7 @@ function AIPage() {
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '42px', fontWeight: '900', color: verdict.color, lineHeight: 1 }}>{score}</div>
+              <div style={{ fontSize: '42px', fontWeight: '900', color: verdict.color, lineHeight: 1 }}>{effectiveScore || '?'}</div>
               <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>Risk Score</div>
             </div>
           </div>
