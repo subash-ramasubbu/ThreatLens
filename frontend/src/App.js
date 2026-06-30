@@ -41,10 +41,10 @@ function Dashboard({ threats, alerts, onIngest, onCorrelate, loading }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1 className="page-title" style={{ margin: 0 }}>Dashboard</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn" style={{ background: '#27272a', color: 'white' }} onClick={onIngest} disabled={loading}>
+          <button className="btn" style={{ background: '#3f3f46', color: 'white' }} onClick={onIngest} disabled={loading}>
             {loading ? 'Loading...' : '⬇ Ingest Threats'}
           </button>
-          <button className="btn" style={{ background: '#27272a', color: 'white' }} onClick={onCorrelate} disabled={loading}>
+          <button className="btn" style={{ background: '#3f3f46', color: 'white' }} onClick={onCorrelate} disabled={loading}>
             🔗 Run Correlation
           </button>
           <button
@@ -372,7 +372,7 @@ function AIPage() {
             onChange={e => setIndicator(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && analyze()}
           />
-          <button className="btn btn-primary" onClick={analyze} disabled={loading}>
+          <button className="btn" style={{ background: '#3f3f46', color: 'white' }} onClick={analyze} disabled={loading}>
             {loading ? 'Analyzing...' : '🔍 Analyze'}
           </button>
         </div>
@@ -521,7 +521,7 @@ function HuntingPage() {
               onChange={e => setQuery(e.target.value)}
             />
           )}
-          <button className="btn btn-primary" onClick={hunt} disabled={loading}>
+          <button className="btn" style={{ background: '#3f3f46', color: 'white' }} onClick={hunt} disabled={loading}>
             {loading ? 'Hunting...' : '🔍 Hunt'}
           </button>
         </div>
@@ -582,7 +582,7 @@ function MLPage() {
         <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
           Uses Isolation Forest algorithm to detect unusual threat patterns that don't match normal behavior.
         </p>
-        <button className="btn btn-primary" onClick={runML} disabled={loading}>
+        <button className="btn" style={{ background: '#3f3f46', color: 'white' }} onClick={runML} disabled={loading}>
           {loading ? 'Analyzing...' : '🤖 Run ML Detection'}
         </button>
       </div>

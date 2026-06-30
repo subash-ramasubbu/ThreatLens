@@ -25,6 +25,9 @@ body {
   padding: 24px 16px;
   position: fixed;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .sidebar-logo {
@@ -67,6 +70,7 @@ body {
   margin-bottom: 4px;
   transition: all 0.2s;
   font-size: 14px;
+  width: 100%;
 }
 
 .nav-item:hover, .nav-item.active {
@@ -197,11 +201,11 @@ tr:hover td {
 }
 
 .btn-primary {
-  background: #27272a;
+  background: #3f3f46;
   color: white;
 }
 
-.btn-primary:hover { background: #18181b; }
+.btn-primary:hover { background: #27272a; }
 
 .btn-success {
   background: #16a34a;
