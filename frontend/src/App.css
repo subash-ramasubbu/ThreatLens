@@ -201,11 +201,11 @@ tr:hover td {
 }
 
 .btn-primary {
-  background: #3f3f46;
+  background: #27272a;
   color: white;
 }
 
-.btn-primary:hover { background: #27272a; }
+.btn-primary:hover { background: #18181b; }
 
 .btn-success {
   background: #16a34a;
