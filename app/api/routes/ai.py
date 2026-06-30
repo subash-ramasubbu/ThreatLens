@@ -27,7 +27,16 @@ def analyze_existing_threat(threat_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/analyze")
-def analyze_indicator(request: IndicatorRequest):
+def analyze_indicator(request: IndicatorRequest, db: Session = Depends(get_db)):
+    existing = db.query(ThreatIndicator).filter(
+        ThreatIndicator.value == request.indicator
+    ).first()
+
+    if existing:
+        result = analyze_threat(existing)
+        result["indicator"] = existing.value
+        return result
+
     return analyze_custom_indicator(request.indicator, request.type)
 
 
