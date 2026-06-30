@@ -197,11 +197,11 @@ tr:hover td {
 }
 
 .btn-primary {
-  background: #4338ca;
+  background: #27272a;
   color: white;
 }
 
-.btn-primary:hover { background: #3730a3; }
+.btn-primary:hover { background: #18181b; }
 
 .btn-success {
   background: #16a34a;
